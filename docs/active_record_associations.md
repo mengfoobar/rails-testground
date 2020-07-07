@@ -61,3 +61,66 @@ class Timesheet < ActiveRecord::Base
   has_many :billable_weeks, -> { includes(:billing_code) }
 end
 ```
+
+# CH 7.5 Many-to-Many Relationships
+
+## CH 7.5.1 has_and_belongs_to_many
+- good for simple joins but not great if you want to attach additional data to join table
+  - attributes from join table are read-only
+```ruby
+class CreateBillingCodesTimesheets < ActiveRecord::Migration
+  def change
+    create_join_table :billing_codes, :timesheets do |t|
+      t.index [:billing_code_id, :timesheet_id]
+      t.index [:timesheet_id, :billing_code_id]
+  end
+end
+
+class Timesheet < ActiveRecord::Base
+  has_and_belongs_to_many :billing_codes
+end
+
+class BillingCode < ActiveRecord::Base
+  has_and_belongs_to_many :timesheets
+end
+```
+- `create_join_table` is a special migration api that takes care of creating join table
+-  self-referential many to many can be done as well but its a bit tricky
+
+## CH 7.5.2 has_many :through
+
+```bash
+rails generate model Physician name:string
+rails generate model Patient name:string
+rails generate model Appointment physician_id:integer patient_id:integer appointment_date:datetime
+```
+
+```ruby
+class Appointment < ApplicationRecord
+  belongs_to :physician
+  belongs_to :patient
+end
+
+class Patient < ApplicationRecord
+  has_many :appointments
+  has_many :physicians, through: :appointments
+end
+
+class Physician < ApplicationRecord
+  has_many :appointments
+  has_many :patients, -> { distinct }, through: :appointments #distinct will get only uniq patients
+end
+```
+- you can not create a child record through the through record
+  - the child record needs to be created first, then added
+- you can validate uniqueness via `validates_uniqueness_of :physician_id, scope: :patient_id`
+  - would check each patient only have one physician
+
+# CH 7.6 One-to-One Relationships
+- similar to `has_many` but limits to one
+- the parent should always add a `destroy` method
+- can be used along wiht `has_many` and act as a scope
+  - used to get stuff like latest, primary
+  - will grab the first one if there are multiple results
+
+
