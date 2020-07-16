@@ -1,0 +1,50 @@
+# CH 19 Asset Pipeline
+- allows serve assets in bundles
+  - reduce load time (compression and in a single file)
+  - cache-busting
+  - easier organization in source
+- assets lives in three places
+  - `app/assets` for files specific to current project
+  - `vendor/assets` for external libraries
+  - `lib/assets` for your own libraries
+  - rails will search for files relatively using these paths when you add them in the manifest
+- manifest files
+  - holds paths that pipeline needs to load
+  - `application.js` for js
+  - `application.css` for css
+  - different ways of add files to paths in manifest
+    - `require` - most common
+    - `require_directory` and `require_tree` will load folder/recursively
+- some gems like `jquery` will add assets to the path automatically
+- a file that requires multiple engines to process can have multiple extensions
+  - ex: `products.css.sass.erb`
+  - it will need to go through erb, sass, and css processors one by one
+  - order is important because if you still have erb formats in sass processor, it will break
+- you can create custom Template::Handlers if not in default Tilt
+- to link assets in rail templates, make sure to add using helper
+  - `<%=stylesheet_link_tag "application" %>`
+  - `<%=javascript_include_tag "application" %>`
+- if you need to add multiple manifest files, you'll need to add them explictly
+  - https://stackoverflow.com/questions/16168166/rails-4-assets-precompilation-with-multiple-manifest-files
+  - don't forget to include them in the view 
+  - usually for stuff like admin
+- other helpers
+  - image helper will find images in `/asset/images`
+  - if you are using `asset_path` helper, or any helpers in a .js file, make sure to add .erb at the end or else asset pipeline will not recognize the ruby stuff
+  - sass has helpers that reduce the ruby code needed to use other helpers (like asset_path)
+- bundled assets are automatically fingerprinted to cache bust
+- expiration date should be set on headers for precompiled asset on web server
+  - TODO: look into why (sec 19.8)
+- on production, rails defaults to not serving static files and instead let web servers handle it
+- rails can be configured to serve assets from CDN
+  - https://edgeguides.rubyonrails.org/asset_pipeline.html#cdns
+- assets can be configured via `config.assets.prefix` setting
+  - defaults to `public/assets`
+- assets needs to be precompiled in prod if your host server does not handle it
+- rails 5.1 has built-in support for `yarn`
+  - it will automatically find paths in node_modules
+  - you will need to still add reference paths in manifest
+- webpack is a replacement for the rails asset pipeline
+  - it also bundles, processes it
+  - ideal for javascript heavy, modular development
+  - it can be used in conjunction but try not to
